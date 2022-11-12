@@ -19,6 +19,7 @@ function useDockerDesktopClient() {
 export function App() {
   const [isRunning, setRunning] = useState<boolean>(false);
   const [isLoading, setLoading] = useState<boolean>(false);
+  const [runningContainers, setRunningContainers] = useState<Container[]>([]);
   const ddClient = useDockerDesktopClient();
 
   const getAllRunningContainers = async (): Promise<Container[]> => {
@@ -31,6 +32,7 @@ export function App() {
 
   const checkWatchTowerRunning = async () => {
     const result = await getAllRunningContainers();
+    setRunningContainers(result);
     setRunning(result.some(c => c.Names[0] === WATCHTOWER_CONTAINER 
       || c.Image === WATCHTOWER_IMAGE));
   };
@@ -82,7 +84,7 @@ export function App() {
         <Button variant="text" href="https://containrrr.dev/watchtower/">VIEW DOCS</Button>
       </Stack>
       <Divider sx={{mt: 4, mb: 4}}></Divider>
-      {isRunning ?  <Running></Running> : <Stopped></Stopped> }
+      {isRunning ?  <Running></Running> : <Stopped containers={runningContainers}></Stopped> }
     </>
   );
 }

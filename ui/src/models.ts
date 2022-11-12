@@ -4,5 +4,6 @@ export interface Container {
     Image: string;
     State: string;
     Status: string;
+    Id: string;
     Names: string[];
 }

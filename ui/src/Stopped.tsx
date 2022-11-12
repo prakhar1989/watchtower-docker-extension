@@ -5,29 +5,37 @@ import {
   Stack,
   Link,
   TextField,
+  Card,
+  Switch,
+  CardContent,
   Select,
   Typography,
 } from "@mui/material";
+import { Container } from "./models";
 
-export default function Stopped() {
+export default function Stopped(props: { containers: Container[] }) {
   const [pollingUnit, setPollingUnit] = useState<string>("mins");
   const [pollingDuration, setPollingDuration] = useState<number>(10);
   const [notificationType, setNotificationType] = useState<string>("slack");
   const [notificationChannel, setNotificationChannel] = useState<string>("");
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  const [areAllSelected, setAll] = useState<boolean>();
 
   const getPlaceholder = (): string => {
     if (notificationType === "slack") {
-        return "slack://[botname@]token-a/token-b/token-c";
+      return "slack://[botname@]token-a/token-b/token-c";
     }
     if (notificationType === "discord") {
-        return "discord://token@id";
+      return "discord://token@id";
     }
     return "custom://";
-  }
+  };
 
   const start = () => {
     console.log({ pollingUnit, pollingDuration, notificationChannel });
   };
+
+  const ts = (d: Date) => `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
 
   return (
     <>
@@ -40,11 +48,51 @@ export default function Stopped() {
         </Stack>
 
         <Stack>
-          <Typography variant="h3">Images</Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-            Choose images that you want Watchtower to monitor. Choose All for
-            Watchtower to monitor all images.
-          </Typography>
+          <Typography variant="h3">Containers</Typography>
+          <Stack>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+              Choose containers that you want Watchtower to monitor.
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+              Monitor all containers
+              <Switch onChange={() => setAll(!areAllSelected)} />
+            </Typography>
+          </Stack>
+          {areAllSelected ? (
+            <></>
+          ) : (
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ mt: 2, minWidth: 800 }}
+              style={{ overflow: "auto" }}
+            >
+              {props.containers.map((container, i) => (
+                <Card
+                  sx={{ minWidth: 100 }}
+                  variant="outlined"
+                  key={i}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setSelectedCards([...selectedCards, container.Id]);
+                  }}
+                >
+                  <CardContent style={{ wordBreak: "break-word" }}>
+                    <Typography
+                      sx={{ fontSize: 14 }}
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      {container.Image}
+                    </Typography>
+                    <Typography sx={{ fontSize: 8 }} color="text.secondary">
+                      Created: {ts(new Date(container.Created * 1000))}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          )}
         </Stack>
 
         <Stack>
@@ -78,7 +126,7 @@ export default function Stopped() {
         </Stack>
 
         <Stack>
-          <Typography variant="h3">Notifications</Typography>
+          <Typography variant="h3">Notifications (optional)</Typography>
           <Typography
             variant="body1"
             color="text.secondary"
@@ -97,7 +145,7 @@ export default function Stopped() {
               size="small"
               onChange={(e) => {
                 setNotificationType(e.target.value);
-                setNotificationChannel('');
+                setNotificationChannel("");
               }}
             >
               <MenuItem value={"slack"}>Slack</MenuItem>
