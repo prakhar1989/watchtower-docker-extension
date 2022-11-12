@@ -19,7 +19,7 @@ export default function Stopped(props: { containers: Container[] }) {
   const [notificationType, setNotificationType] = useState<string>("slack");
   const [notificationChannel, setNotificationChannel] = useState<string>("");
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [areAllSelected, setAll] = useState<boolean>();
+  const [areAllSelected, setAll] = useState<boolean>(true);
 
   const getPlaceholder = (): string => {
     if (notificationType === "slack") {
@@ -32,10 +32,25 @@ export default function Stopped(props: { containers: Container[] }) {
   };
 
   const start = () => {
-    console.log({ pollingUnit, pollingDuration, notificationChannel });
+    console.log({
+      pollingUnit,
+      pollingDuration,
+      notificationChannel,
+      areAllSelected,
+      selectedCards,
+    });
   };
 
   const ts = (d: Date) => `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+  const isCardSelected = (id: string) => selectedCards.includes(id);
+
+  const toggleCardSelection = (id: string) => {
+    if (isCardSelected(id)) {
+      setSelectedCards(selectedCards.filter((s) => s !== id));
+    } else {
+      setSelectedCards([...selectedCards, id]);
+    }
+  };
 
   return (
     <>
@@ -69,13 +84,16 @@ export default function Stopped(props: { containers: Container[] }) {
             >
               {props.containers.map((container, i) => (
                 <Card
-                  sx={{ minWidth: 100 }}
+                  sx={{
+                    minWidth: 100,
+                    borderColor: isCardSelected(container.Id)
+                      ? "primary.main"
+                      : "",
+                  }}
                   variant="outlined"
                   key={i}
                   style={{ cursor: "pointer" }}
-                  onClick={() => {
-                    setSelectedCards([...selectedCards, container.Id]);
-                  }}
+                  onClick={() => toggleCardSelection(container.Id)}
                 >
                   <CardContent style={{ wordBreak: "break-word" }}>
                     <Typography
