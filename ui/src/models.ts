@@ -7,3 +7,11 @@ export interface Container {
     Id: string;
     Names: string[];
 }
+
+export interface StartArgs {
+  pollingUnit: number;
+  pollingDuration: "mins" | "seconds" | "hours";
+  notificationChannel: string;
+  areAllSelected: boolean;
+  selectedCards: string[];
+}

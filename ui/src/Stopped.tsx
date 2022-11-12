@@ -11,9 +11,9 @@ import {
   Select,
   Typography,
 } from "@mui/material";
-import { Container } from "./models";
+import { Container, StartArgs } from "./models";
 
-export default function Stopped(props: { containers: Container[] }) {
+export default function Stopped(props: { containers: Container[], onStart: (StartArgs) => any }) {
   const [pollingUnit, setPollingUnit] = useState<string>("mins");
   const [pollingDuration, setPollingDuration] = useState<number>(10);
   const [notificationType, setNotificationType] = useState<string>("slack");
@@ -32,7 +32,7 @@ export default function Stopped(props: { containers: Container[] }) {
   };
 
   const start = () => {
-    console.log({
+    props.onStart({
       pollingUnit,
       pollingDuration,
       notificationChannel,
