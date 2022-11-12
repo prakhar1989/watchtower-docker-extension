@@ -1,0 +1,19 @@
+{
+  "icon": "docker.svg",
+  "vm": {
+    "composefile": "docker-compose.yaml",
+    "exposes": {
+      "socket": "extension-watchtowerr.sock"
+    }
+  },
+  "ui": {
+    "dashboard-tab": {
+      "title": "Watchtowerr",
+      "src": "index.html",
+      "root": "ui",
+      "backend": {
+        "socket": "extension-watchtowerr.sock"
+      }
+    }
+  }
+}
