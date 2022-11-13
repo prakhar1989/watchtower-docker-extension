@@ -86,14 +86,14 @@ export default function Stopped(props: { containers: Container[], onStart: (Star
                 <Card
                   sx={{
                     minWidth: 100,
-                    borderColor: isCardSelected(container.Id)
+                    borderColor: isCardSelected(container.Names[0])
                       ? "primary.main"
                       : "",
                   }}
                   variant="outlined"
                   key={i}
                   style={{ cursor: "pointer" }}
-                  onClick={() => toggleCardSelection(container.Id)}
+                  onClick={() => toggleCardSelection(container.Names[0])}
                 >
                   <CardContent style={{ wordBreak: "break-word" }}>
                     <Typography
@@ -101,7 +101,7 @@ export default function Stopped(props: { containers: Container[], onStart: (Star
                       color="text.secondary"
                       gutterBottom
                     >
-                      {container.Image}
+                      {container.Names[0]}
                     </Typography>
                     <Typography sx={{ fontSize: 8 }} color="text.secondary">
                       Created: {ts(new Date(container.Created * 1000))}
@@ -150,11 +150,7 @@ export default function Stopped(props: { containers: Container[], onStart: (Star
             color="text.secondary"
             sx={{ mt: 2, mb: 2 }}
           >
-            Specify a notification channel. Use Shouterr to send the
-            notification.{" "}
-            <Link href="https://containrrr.dev/watchtower/notifications/">
-              Read more
-            </Link>
+            Specify a notification channel. <Link href="https://containrrr.dev/shoutrrr/v0.6/services/overview">Read here</Link> to learn more about the different service URLs you can use.
           </Typography>
           <Stack direction="row" spacing={2}>
             <Select

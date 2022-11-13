@@ -17,14 +17,14 @@ function useDockerDesktopClient() {
 }
 
 function pollingIntervalToSeconds(args: StartArgs) {
-  if (args.pollingDuration === "seconds") {
-    return args.pollingUnit;
+  if (args.pollingUnit === "seconds") {
+    return args.pollingDuration;
   }
-  if (args.pollingDuration === "mins") {
-    return args.pollingUnit * 60;
+  if (args.pollingUnit === "mins") {
+    return args.pollingDuration * 60;
   }
   // hours
-  return args.pollingUnit * 60 * 60;
+  return args.pollingDuration * 60 * 60;
 }
 
 export function App() {
@@ -60,16 +60,24 @@ export function App() {
   const startWatchTower = async (args: StartArgs) => {
     console.log("starting", args);
     const interval = pollingIntervalToSeconds(args);
-    setLoading(true);
-    await ddClient.docker.cli.exec("run", [
+    const runArgs =  [
+      "--name",
+      "watchtower",
       "--rm",
       "--detach",
       "-v",
       "/var/run/docker.sock:/var/run/docker.sock",
+      WATCHTOWER_IMAGE,
       "--interval",
       interval.toString(),
-      WATCHTOWER_IMAGE,
-    ]);
+    ];
+    if (!args.areAllSelected) {
+      const names = args.selectedCards.map(c => c.replace("/", ""));
+      runArgs.push(...names);
+    }
+    setLoading(true);
+    console.log(runArgs);
+    await ddClient.docker.cli.exec("run", runArgs);
     setLoading(false);
   };
 

@@ -9,8 +9,8 @@ export interface Container {
 }
 
 export interface StartArgs {
-  pollingUnit: number;
-  pollingDuration: "mins" | "seconds" | "hours";
+  pollingDuration: number;
+  pollingUnit: "mins" | "seconds" | "hours";
   notificationChannel: string;
   areAllSelected: boolean;
   selectedCards: string[];
