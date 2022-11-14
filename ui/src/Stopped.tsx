@@ -86,6 +86,7 @@ export default function Stopped(props: { containers: Container[], onStart: (Star
                 <Card
                   sx={{
                     minWidth: 100,
+                    borderWidth: 2,
                     borderColor: isCardSelected(container.Names[0])
                       ? "primary.main"
                       : "",
