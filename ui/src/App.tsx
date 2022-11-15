@@ -1,12 +1,19 @@
-import { createDockerDesktopClient } from "@docker/extension-api-client";
-import { Divider, CircularProgress, Card, CardContent, Stack, Typography } from "@mui/material";
-import Button from "@mui/material/Button";
 import React, { useEffect, useState } from "react";
+import { createDockerDesktopClient } from "@docker/extension-api-client";
+import {
+  Divider,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
+import Button from "@mui/material/Button";
 import { Container, StartArgs } from "./models";
 import Stopped from "./Stopped";
+import Running from "./Running";
 
 const WATCHTOWER_IMAGE = "containrrr/watchtower";
 const WATCHTOWER_CONTAINER = "watchtower";
+const WATCHTOWER_COMMAND_REGEX = /^\/watchtower (--interval (\d+))?([\s\w]+)*/;
 
 // Note: This line relies on Docker Desktop's presence as a host application.
 // If you're running this React app in a browser, it won't work properly.
@@ -30,10 +37,12 @@ function pollingIntervalToSeconds(args: StartArgs) {
 export function App() {
   const [isRunning, setRunning] = useState<boolean>(false);
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [watchtowerContainer, setWatchtowerContainer] = useState<Container|undefined>(undefined);
+  const [watchtowerContainer, setWatchtowerContainer] = useState<
+    Container | undefined
+  >(undefined);
   const [runningContainers, setRunningContainers] = useState<Container[]>([]);
   const [logs, setLogs] = useState<string[]>([]);
-
+  const [runningArgs, setArgs] = useState<StartArgs | undefined>(undefined);
 
   const ddClient = useDockerDesktopClient();
 
@@ -42,7 +51,7 @@ export function App() {
       return;
     }
 
-    console.log('attempting to listen to logs')
+    console.log("attempting to listen to logs");
     const listener = await ddClient.docker.cli.exec(
       "logs",
       [WATCHTOWER_CONTAINER],
@@ -53,8 +62,7 @@ export function App() {
               console.error("stdout", data.stdout);
             } else {
               if (data.stderr) {
-                console.log(data.stderr);
-                setLogs(logs => [...logs, data.stderr]);
+                setLogs((logs) => [...logs, data.stderr]);
               }
             }
           },
@@ -69,7 +77,7 @@ export function App() {
       }
     );
     return listener;
-  }
+  };
 
   const getAllRunningContainers = async (): Promise<Container[]> => {
     const containers = (await ddClient.docker.listContainers({
@@ -87,7 +95,6 @@ export function App() {
     );
     if (watchtower) {
       setRunning(true);
-      setWatchtowerContainer(watchtower);
     } else {
       setRunning(false);
     }
@@ -96,7 +103,7 @@ export function App() {
   const startWatchTower = async (args: StartArgs) => {
     console.log("starting", args);
     const interval = pollingIntervalToSeconds(args);
-    const runArgs =  [
+    const runArgs = [
       "--name",
       WATCHTOWER_CONTAINER,
       "--rm",
@@ -108,7 +115,7 @@ export function App() {
       interval.toString(),
     ];
     if (!args.areAllSelected) {
-      const names = args.selectedCards.map(c => c.replace("/", ""));
+      const names = args.selectedCards.map((c) => c.replace("/", ""));
       runArgs.push(...names);
     }
     setLoading(true);
@@ -116,45 +123,48 @@ export function App() {
     setLoading(false);
   };
 
-  const stopWatchtower = async () => {
-    setLoading(true);
-    console.log("stopping");
-    await ddClient.docker.cli.exec("run", ["stop", WATCHTOWER_CONTAINER]);
-    setLoading(false);
-  }
+  // Used when watchtower is alraedy running and we need to figure out
+  // what args it was started with
+  const parseConfigFromWatchtower = (container: Container) => {
+    // /watchtower --interval 600 nginx redis
+    let m;
+    const cmd = container.Command;
+    if ((m = WATCHTOWER_COMMAND_REGEX.exec(cmd)) !== null) {
+      // The result can be accessed through the `m`-variable.
+      m.forEach((match, groupIndex) => {
+        console.log(`Found match, group ${groupIndex}: ${match}`);
+      });
+    }
+    //console.log(watchtower);
+  };
 
-  function Running() {
-    return (
-      <>
-        <Stack direction="row" spacing={2} sx={{mb: 2}}>
-          <Typography variant="h2">WatchTower is running</Typography>
-          <Button variant="outlined" onClick={stopWatchtower}>Stop Watchtower</Button>
-        </Stack>
-        <Stack direction="row" spacing={4} justifyContent="space-between">
-          <Stack spacing={2}>
-            <Typography variant="h3">Configuration</Typography>
-          </Stack>
-          <Stack spacing={2}>
-            <Typography variant="h3">Logs</Typography>
-            <Stack direction="column" spacing={1}>
-              {logs.map((log, i) => <Card key={i}>
-                <CardContent>
-                  {log}
-                </CardContent>
-              </Card>)}
-            </Stack>
-          </Stack>
-        </Stack>
-      </>
-    );
-  }
+  const stop = async () => {
+    //setLoading(true);
+    console.log("stopping");
+    //await ddClient.docker.cli.exec("stop", [WATCHTOWER_CONTAINER]);
+    //setLoading(false);
+  };
 
   useEffect(() => {
     checkWatchTowerRunning();
   });
 
   useEffect(() => {
-    listenToLogs();
+    (async () => {
+      const result = await getAllRunningContainers();
+      const watchtower = result.find(
+        (c) =>
+          c.Names[0] === WATCHTOWER_CONTAINER || c.Image === WATCHTOWER_IMAGE
+      );
+      if (watchtower) {
+        setWatchtowerContainer(watchtower);
+        parseConfigFromWatchtower(watchtower);
+      }
+    })();
+
+    return () => {
+      // this now gets called when the component unmounts
+    };
   }, [isRunning]);
 
   return (
@@ -172,7 +182,11 @@ export function App() {
       <Divider sx={{ mt: 4, mb: 4 }}></Divider>
       {isLoading ? <CircularProgress></CircularProgress> : <></>}
       {isRunning ? (
-        <Running></Running>
+        <Running
+          container={watchtowerContainer}
+          logs={logs}
+          onStop={stop}
+        ></Running>
       ) : (
         <Stopped
           onStart={startWatchTower}
