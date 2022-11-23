@@ -59,7 +59,7 @@ export function App() {
     }
   };
 
-  const startWatchTower = async (args: StartArgs) => {
+  const start = async (args: StartArgs) => {
     console.log("starting", args);
     const interval = pollingIntervalToSeconds(args);
     const runArgs = [
@@ -138,7 +138,7 @@ export function App() {
             ></Running>
           ) : (
             <Stopped
-              onStart={startWatchTower}
+              onStart={start}
               containers={runningContainers}
             ></Stopped>
           )}
