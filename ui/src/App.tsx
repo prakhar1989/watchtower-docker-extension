@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createDockerDesktopClient } from "@docker/extension-api-client";
-import {
-  Divider,
-  CircularProgress,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Divider, CircularProgress, Stack, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import { Container, StartArgs } from "./models";
 import Stopped from "./Stopped";
@@ -123,7 +118,7 @@ export function App() {
     setLoading(false);
   };
 
-  // Used when watchtower is alraedy running and we need to figure out
+  // Used when watchtower is already running and we need to figure out
   // what args it was started with
   const parseConfigFromWatchtower = (container: Container) => {
     // /watchtower --interval 600 nginx redis
@@ -134,15 +129,20 @@ export function App() {
       m.forEach((match, groupIndex) => {
         console.log(`Found match, group ${groupIndex}: ${match}`);
       });
+      if (m.length === 4) {
+        // has interval and specific containers
+        const intervalInSecs = m[2] ? m[2].trim() : 86400;
+        const containers = m[3] ? m[3].trim().split(" ") : [];
+        console.log("Interval", intervalInSecs, "containers", containers);
+      }
     }
     //console.log(watchtower);
   };
 
   const stop = async () => {
-    //setLoading(true);
-    console.log("stopping");
-    //await ddClient.docker.cli.exec("stop", [WATCHTOWER_CONTAINER]);
-    //setLoading(false);
+    setLoading(true);
+    await ddClient.docker.cli.exec("stop", [WATCHTOWER_CONTAINER]);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -180,18 +180,23 @@ export function App() {
         </Button>
       </Stack>
       <Divider sx={{ mt: 4, mb: 4 }}></Divider>
-      {isLoading ? <CircularProgress></CircularProgress> : <></>}
-      {isRunning ? (
-        <Running
-          container={watchtowerContainer}
-          logs={logs}
-          onStop={stop}
-        ></Running>
+      {isLoading ? (
+        <CircularProgress></CircularProgress>
       ) : (
-        <Stopped
-          onStart={startWatchTower}
-          containers={runningContainers}
-        ></Stopped>
+        <>
+          {isRunning ? (
+            <Running
+              container={watchtowerContainer}
+              logs={logs}
+              onStop={stop}
+            ></Running>
+          ) : (
+            <Stopped
+              onStart={startWatchTower}
+              containers={runningContainers}
+            ></Stopped>
+          )}
+        </>
       )}
     </>
   );

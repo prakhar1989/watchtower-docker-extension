@@ -13,7 +13,6 @@ export default function Running(props: {container: Container, logs: string[], on
       <Stack direction="row" spacing={4} justifyContent="space-between">
         <Stack spacing={2}>
           <Typography variant="h3">Configuration</Typography>
-          <pre>{JSON.stringify(props.container, null, 2)}</pre>
         </Stack>
         <Stack spacing={2}>
           <Typography variant="h3">Logs</Typography>
