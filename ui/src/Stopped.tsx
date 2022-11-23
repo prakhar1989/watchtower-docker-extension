@@ -70,7 +70,7 @@ export default function Stopped(props: { containers: Container[], onStart: (Star
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
               Monitor all containers
-              <Switch onChange={() => setAll(!areAllSelected)} />
+              <Switch defaultChecked onChange={() => setAll(!areAllSelected)} />
             </Typography>
           </Stack>
           {areAllSelected ? (
