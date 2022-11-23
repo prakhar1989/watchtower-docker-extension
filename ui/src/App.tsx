@@ -35,43 +35,8 @@ export function App() {
     Container | undefined
   >(undefined);
   const [runningContainers, setRunningContainers] = useState<Container[]>([]);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [runningArgs, setArgs] = useState<StartArgs | undefined>(undefined);
 
   const ddClient = useDockerDesktopClient();
-
-  const listenToLogs = async () => {
-    if (!isRunning) {
-      return;
-    }
-
-    console.log("attempting to listen to logs");
-    const listener = await ddClient.docker.cli.exec(
-      "logs",
-      [WATCHTOWER_CONTAINER],
-      {
-        stream: {
-          onOutput(data) {
-            if (data.stdout) {
-              console.error("stdout", data.stdout);
-            } else {
-              if (data.stderr) {
-                setLogs((logs) => [...logs, data.stderr]);
-              }
-            }
-          },
-          onError(error) {
-            console.error("error", error);
-          },
-          onClose(exitCode) {
-            console.log("onClose with exit code " + exitCode);
-          },
-          splitOutputLines: true,
-        },
-      }
-    );
-    return listener;
-  };
 
   const getAllRunningContainers = async (): Promise<Container[]> => {
     const containers = (await ddClient.docker.listContainers({
@@ -168,7 +133,7 @@ export function App() {
           {isRunning ? (
             <Running
               container={watchtowerContainer}
-              logs={logs}
+              ddClient={ddClient}
               onStop={stop}
             ></Running>
           ) : (

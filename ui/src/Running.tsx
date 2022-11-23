@@ -2,17 +2,21 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, Stack, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import { Container, RunningArgs } from "./models";
+import { DockerDesktopClient } from "@docker/extension-api-client-types/dist/v1";
 
+const WATCHTOWER_CONTAINER = "watchtower";
 const WATCHTOWER_COMMAND_REGEX = /^\/watchtower (--interval (\d+))?([\s\w]+)*/;
 
 export default function Running(props: {
   container: Container;
-  logs: string[];
+  ddClient: DockerDesktopClient;
   onStop: () => any;
 }) {
   const [runningArgs, setRunningArgs] = useState<RunningArgs | undefined>(
     undefined
   );
+  const [logs, setLogs] = useState<string[]>([]);
+
 
   // Used when watchtower is already running and we need to figure out
   // what args it was started with
@@ -60,6 +64,36 @@ export default function Running(props: {
         setRunningArgs(runningArgs);
       }
     }
+
+    async function listenToLogs() {
+      console.log("attempting to listen to logs");
+      const listener = await props.ddClient.docker.cli.exec(
+        "logs",
+        [WATCHTOWER_CONTAINER],
+        {
+          stream: {
+            onOutput(data) {
+              if (data.stdout) {
+                console.error("stdout", data.stdout);
+              } else {
+                if (data.stderr) {
+                  setLogs((logs) => [...logs, data.stderr]);
+                }
+              }
+            },
+            onError(error) {
+              console.error("error", error);
+            },
+            onClose(exitCode) {
+              console.log("onClose with exit code " + exitCode);
+            },
+            splitOutputLines: true,
+          },
+        }
+      );
+      return listener;
+    };
+
   }, []);
 
   return (
@@ -76,7 +110,7 @@ export default function Running(props: {
         <Stack spacing={2}>
           <Typography variant="h3">Logs</Typography>
           <Stack direction="column" spacing={1}>
-            {props.logs.map((log, i) => (
+            {logs.map((log, i) => (
               <Card key={log}>
                 <CardContent>{log}</CardContent>
               </Card>
