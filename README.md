@@ -5,6 +5,7 @@ A Docker extension for automating Docker container base image updates.
 Built on the top of excellent tool - https://github.com/containrrr/watchtower
 
 ![i1](screenshots/1.png)
+![i2](screenshots/2.png)
 
 ## Installation
 
