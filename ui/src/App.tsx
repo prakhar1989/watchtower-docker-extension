@@ -8,7 +8,6 @@ import Running from "./Running";
 
 const WATCHTOWER_IMAGE = "containrrr/watchtower";
 const WATCHTOWER_CONTAINER = "watchtower";
-const WATCHTOWER_COMMAND_REGEX = /^\/watchtower (--interval (\d+))?([\s\w]+)*/;
 
 // Note: This line relies on Docker Desktop's presence as a host application.
 // If you're running this React app in a browser, it won't work properly.
@@ -113,30 +112,13 @@ export function App() {
       const names = args.selectedCards.map((c) => c.replace("/", ""));
       runArgs.push(...names);
     }
-    setLoading(true);
-    await ddClient.docker.cli.exec("run", runArgs);
-    setLoading(false);
-  };
-
-  // Used when watchtower is already running and we need to figure out
-  // what args it was started with
-  const parseConfigFromWatchtower = (container: Container) => {
-    // /watchtower --interval 600 nginx redis
-    let m;
-    const cmd = container.Command;
-    if ((m = WATCHTOWER_COMMAND_REGEX.exec(cmd)) !== null) {
-      // The result can be accessed through the `m`-variable.
-      m.forEach((match, groupIndex) => {
-        console.log(`Found match, group ${groupIndex}: ${match}`);
-      });
-      if (m.length === 4) {
-        // has interval and specific containers
-        const intervalInSecs = m[2] ? m[2].trim() : 86400;
-        const containers = m[3] ? m[3].trim().split(" ") : [];
-        console.log("Interval", intervalInSecs, "containers", containers);
-      }
+    try {
+      setLoading(true);
+      await ddClient.docker.cli.exec("run", runArgs);
+    } catch (e) {
+      console.error("Unable to start watchtower", e);
     }
-    //console.log(watchtower);
+    setLoading(false);
   };
 
   const stop = async () => {
@@ -158,7 +140,6 @@ export function App() {
       );
       if (watchtower) {
         setWatchtowerContainer(watchtower);
-        parseConfigFromWatchtower(watchtower);
       }
     })();
 

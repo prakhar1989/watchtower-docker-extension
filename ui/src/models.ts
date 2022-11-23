@@ -15,3 +15,8 @@ export interface StartArgs {
   areAllSelected: boolean;
   selectedCards: string[];
 }
+
+export interface RunningArgs {
+  pollingInterval: number;
+  runningContainerIds: string[];
+}
